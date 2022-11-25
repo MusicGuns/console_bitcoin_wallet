@@ -14,7 +14,7 @@ puts "your adress #{bitcoin_wallet.key.addr}"
 input = nil
 while input != 'exit'
   print 'enter exit/balance/transaction : '
-  input = gets.chomp
+  input = $stdin.gets.chomp
 
   puts "balance: #{bitcoin_wallet.balance}" if input == 'balance'
   puts
