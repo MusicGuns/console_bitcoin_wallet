@@ -1,0 +1,27 @@
+GEM
+  specs:
+    bitcoin-ruby (0.0.20)
+      eventmachine
+      ffi
+      scrypt
+    blockcypher-ruby (0.2.7)
+      bitcoin-ruby (~> 0.0.5)
+      ffi
+    eventmachine (1.2.7)
+    ffi (1.15.5)
+    ffi-compiler (1.0.1)
+      ffi (>= 1.0.0)
+      rake
+    rake (13.0.6)
+    scrypt (3.0.7)
+      ffi-compiler (>= 1.0, < 2.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  bitcoin-ruby
+  blockcypher-ruby
+
+BUNDLED WITH
+   1.17.3

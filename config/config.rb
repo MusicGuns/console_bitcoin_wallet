@@ -1,0 +1,1 @@
+Bitcoin.network = :testnet3
