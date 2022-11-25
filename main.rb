@@ -19,13 +19,3 @@ while input != 'exit'
   puts "balance: #{bitcoin_wallet.balance}" if input == 'balance'
   puts
 end
-
-# pp key = Bitcoin::Key.generate
-# pp key.priv
-# pp key.pub
-# pp key.addr
-# pp key.to_base58
-# # 5aa04682734c4911bed12a3f79407a2f
-# block_cypher = BlockCypher::Api.new(api_token: '5aa04682734c4911bed12a3f79407a2f', currency: BlockCypher::BTC,
-#                                     network: BlockCypher::TEST_NET_3)
-# pp block_cypher.address_final_balance(key.addr)
