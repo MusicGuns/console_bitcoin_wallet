@@ -1,0 +1,8 @@
+version: "3.1"
+
+services:
+  ruby:
+    build: .
+    command: bash
+    stdin_open: true
+    tty: true

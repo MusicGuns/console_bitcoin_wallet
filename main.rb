@@ -1,7 +1,6 @@
 require 'bitcoin'
-require_relative 'lib/bitcoin_wallet'
-require 'blockcypher'
 require_relative 'config/config'
+require_relative 'lib/bitcoin_wallet'
 
 abort 'too many arguments' if ARGV.count > 1
 
@@ -17,5 +16,11 @@ while input != 'exit'
   input = $stdin.gets.chomp
 
   puts "balance: #{bitcoin_wallet.balance}" if input == 'balance'
-  puts
+  next unless input == 'transaction'
+
+  print 'address:'
+  addr = $stdin.gets.chomp.to_s
+  print 'amount(in satoshi):'
+  amount = $stdin.gets.chomp.to_i
+  puts bitcoin_wallet.transaction(addr, amount)
 end
