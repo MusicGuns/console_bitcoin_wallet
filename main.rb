@@ -4,7 +4,7 @@ require_relative 'lib/bitcoin_wallet'
 
 abort 'too many arguments' if ARGV.count > 1
 
-BitcoinWallet.save_key(ARGV[0]) unless File.exist?('data/private_key.txt')
+BitcoinWallet.save_key(ARGV[0]) if !File.exist?('data/private_key.txt') || ARGV[0]
 
 bitcoin_wallet = BitcoinWallet.from_file
 

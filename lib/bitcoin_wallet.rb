@@ -13,7 +13,7 @@ class BitcoinWallet
   end
 
   def self.save_key(key)
-    file_key = File.new(FILE_PATH, 'a')
+    file_key = File.new(FILE_PATH, 'w')
     if key.nil?
       file_key.print(Bitcoin::Key.generate.to_base58)
     else
