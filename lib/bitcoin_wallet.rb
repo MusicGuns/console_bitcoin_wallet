@@ -1,11 +1,15 @@
 require 'blockcypher'
 require 'stringio'
+require 'net/http'
+require 'json'
 
 class BitcoinWallet
   include Bitcoin::Builder
   FILE_PATH = 'data/private_key.txt'.freeze
-  BLOCK_CYPHER = BlockCypher::Api.new(api_token: '5aa04682734c4911bed12a3f79407a2f', currency: BlockCypher::BTC,
-                                      network: BlockCypher::TEST_NET_3).freeze
+  #BLOCK_CYPHER = BlockCypher::Api.new(api_token: '5aa04682734c4911bed12a3f79407a2f', currency: BlockCypher::BTC,
+  #                                    network: BlockCypher::TEST_NET_3).freeze
+
+
   attr_reader :key
 
   def initialize(key)
@@ -33,33 +37,30 @@ class BitcoinWallet
   end
 
   def balance
-    BLOCK_CYPHER.address_final_balance(@key.addr).fdiv(100_000_000)
+    JSON.parse(Net::HTTP.get(URI("https://blockstream.info/testnet/api/address/#{@key.addr}/utxo")))
+      .reduce(0) { |sum, tx| sum += tx['value']  }
   end
 
   def transaction(addr, amount)
-    address_info = BLOCK_CYPHER.address_details(@key.addr, unspent_only: true)
-    prev_unconfirmed_txs = address_info['unconfirmed_txrefs'] || []
-    prev_txs = address_info['txrefs'] || []
-    all_prev_txs = prev_txs + prev_unconfirmed_txs
-
-    all_prev_txs.map! do |tx|
-      { hash: tx['tx_hash'], index: tx['tx_output_n'] }
+    utxo = JSON.parse(Net::HTTP.get(URI("https://blockstream.info/testnet/api/address/#{@key.addr}/utxo")))
+    .map! do |tx|
+      { hash: tx['txid'], index: tx['vout'] }
     end
 
-    commision = all_prev_txs.count * 148 + 2 * 34 + 10
+    commision = utxo.count * 148 + 2 * 34 + 10
     return 'not enough funds' if amount > balance * 100_000_000 + commision
 
-    all_prev_txs.map! do |tx|
-      raw = [BLOCK_CYPHER.blockchain_transaction(tx[:hash], includeHex: true)['hex']].pack('H*')
+    utxo.map! do |tx|
+      raw = Net::HTTP.get(URI("https://blockstream.info/testnet/api/tx/#{tx[:hash]}/raw"))
 
       { hash: Bitcoin::Protocol::Tx.new(raw), index: tx[:index] }
     end
 
     new_tx = build_tx do |t|
-      all_prev_txs.each do |tx_info|
+      utxo.each do |tx|
         t.input do |i|
-          i.prev_out tx_info[:hash]
-          i.prev_out_index tx_info[:index]
+          i.prev_out tx[:hash]
+          i.prev_out_index tx[:index]
           i.signature_key @key
         end
       end
@@ -74,7 +75,7 @@ class BitcoinWallet
         o.script { |s| s.recipient @key.addr }
       end
     end
-    BLOCK_CYPHER.push_hex(new_tx.to_payload.bth)
+    p Net::HTTP.post(URI("https://blockstream.info/testnet/api/tx"), new_tx.to_payload.bth, nil)
     'transaction has been sent'
   end
 end
