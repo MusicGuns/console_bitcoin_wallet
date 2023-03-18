@@ -38,6 +38,7 @@ class BitcoinWallet
   def balance
     JSON.parse(Net::HTTP.get(URI("#{BLOCKSTREAM_API}address/#{@key.addr}/utxo")))
       .reduce(0) { |sum, tx| sum += tx['value']  }
+      .fdiv(100_000_000)
   end
 
   def transaction(addr, amount)
@@ -70,7 +71,7 @@ class BitcoinWallet
       end
 
       t.output do |o|
-        o.value balance - commision - amount
+        o.value balance * 100_000_000 - commision - amount
         o.script { |s| s.recipient @key.addr }
       end
     end
