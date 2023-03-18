@@ -6,8 +6,7 @@ require 'json'
 class BitcoinWallet
   include Bitcoin::Builder
   FILE_PATH = 'data/private_key.txt'.freeze
-  #BLOCK_CYPHER = BlockCypher::Api.new(api_token: '5aa04682734c4911bed12a3f79407a2f', currency: BlockCypher::BTC,
-  #                                    network: BlockCypher::TEST_NET_3).freeze
+  BLOCKSTREAM_API = "https://blockstream.info/testnet/api/"
 
 
   attr_reader :key
@@ -37,12 +36,12 @@ class BitcoinWallet
   end
 
   def balance
-    JSON.parse(Net::HTTP.get(URI("https://blockstream.info/testnet/api/address/#{@key.addr}/utxo")))
+    JSON.parse(Net::HTTP.get(URI("#{BLOCKSTREAM_API}address/#{@key.addr}/utxo")))
       .reduce(0) { |sum, tx| sum += tx['value']  }
   end
 
   def transaction(addr, amount)
-    utxo = JSON.parse(Net::HTTP.get(URI("https://blockstream.info/testnet/api/address/#{@key.addr}/utxo")))
+    utxo = JSON.parse(Net::HTTP.get(URI("#{BLOCKSTREAM_API}address/#{@key.addr}/utxo")))
     .map! do |tx|
       { hash: tx['txid'], index: tx['vout'] }
     end
@@ -51,7 +50,7 @@ class BitcoinWallet
     return 'not enough funds' if amount > balance * 100_000_000 + commision
 
     utxo.map! do |tx|
-      raw = Net::HTTP.get(URI("https://blockstream.info/testnet/api/tx/#{tx[:hash]}/raw"))
+      raw = Net::HTTP.get(URI("#{BLOCKSTREAM_API}tx/#{tx[:hash]}/raw"))
 
       { hash: Bitcoin::Protocol::Tx.new(raw), index: tx[:index] }
     end
@@ -71,11 +70,16 @@ class BitcoinWallet
       end
 
       t.output do |o|
-        o.value balance * 100_000_000 - commision - amount
+        o.value balance - commision - amount
         o.script { |s| s.recipient @key.addr }
       end
     end
-    p Net::HTTP.post(URI("https://blockstream.info/testnet/api/tx"), new_tx.to_payload.bth, nil)
-    'transaction has been sent'
+
+    res = Net::HTTP.post(URI("#{BLOCKSTREAM_API}tx"), new_tx.to_payload.bth)
+    if res.is_a?(Net::HTTPOK)
+      "Transaction has been sent\nHash transaction: #{new_tx.to_hash["hash"]}"
+    else
+      'Something went wrong'
+    end
   end
 end
