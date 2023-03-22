@@ -1,4 +1,4 @@
-# console_bitcoin_wallet
+# Console bitcoin wallet
 Bitcoin wallet for to send BTC, where you can send transactions and view your balance
 
 ## Launching
