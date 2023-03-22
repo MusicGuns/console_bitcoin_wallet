@@ -4,7 +4,7 @@ Bitcoin wallet for to send BTC, where you can send transactions and view your ba
 ## Launching
 1. Clone Repo
 2. Use bundler
-3. run ьain.rb with or without a private key
+3. Run main.rb with or without a private key
 >```
 >ruby main.rb
 >```
